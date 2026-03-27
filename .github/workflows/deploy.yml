@@ -1,0 +1,94 @@
+name: Build and Deploy
+
+on:
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: "Rama a desplegar"
+        required: true
+        default: "main"
+      ambiente:
+        description: "Ambiente"
+        required: true
+        type: choice
+        options:
+          - dev
+          - staging
+          - prod
+
+env:
+  ACR_NAME: miacrprueba
+  IMAGE_NAME: saludar
+  RESOURCE_GROUP: prueba
+  AKS_CLUSTER: saludar-aks
+
+jobs:
+  test:
+    name: Validar tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.branch }}
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          java-version: '25'
+          distribution: 'temurin'
+
+      - name: Dar permisos a gradlew
+        run: chmod +x gradlew
+
+      - name: Ejecutar tests
+        run: ./gradlew test --no-daemon
+
+  build:
+    name: Registrar imagen en ACR
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.branch }}
+
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Build y Push imagen a ACR
+        run: |
+          az acr build \
+            --registry $ACR_NAME \
+            --image $IMAGE_NAME-${{ github.event.inputs.ambiente }}:${{ github.sha }} \
+            --image $IMAGE_NAME-${{ github.event.inputs.ambiente }}:latest .
+
+  deploy:
+    name: Desplegar en AKS
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.branch }}
+
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Configurar kubeconfig
+        run: |
+          az aks get-credentials \
+            --resource-group $RESOURCE_GROUP \
+            --name $AKS_CLUSTER
+
+      - name: Desplegar en AKS
+        run: |
+          kubectl apply -f k8s/deployment.yaml
+          kubectl set image deployment/saludar \
+            saludar=$ACR_NAME.azurecr.io/$IMAGE_NAME-${{ github.event.inputs.ambiente }}:${{ github.sha }}
+
+      - name: Verificar despliegue
+        run: kubectl rollout status deployment/saludar
