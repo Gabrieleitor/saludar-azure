@@ -1,0 +1,55 @@
+name: CD - Manual deploy to AKS
+
+on:
+  workflow_dispatch:
+    inputs:
+      image_tag:
+        description: 'Tag de imagen a desplegar (por ejemplo, SHA del commit)'
+        required: true
+        type: string
+
+env:
+  IMAGE_NAME: saludar
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Azure login
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Set AKS context
+        uses: azure/aks-set-context@v4
+        with:
+          resource-group: ${{ vars.AKS_RESOURCE_GROUP }}
+          cluster-name: ${{ vars.AKS_CLUSTER_NAME }}
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v4
+
+      - name: Deploy to AKS with Helm
+        env:
+          IMAGE_REPOSITORY: ${{ vars.ACR_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}
+          IMAGE_TAG: ${{ github.event.inputs.image_tag }}
+        run: |
+          helm upgrade --install saludar ./helm/saludar \
+            --namespace saludar \
+            --create-namespace \
+            --set image.repository=${IMAGE_REPOSITORY} \
+            --set image.tag=${IMAGE_TAG} \
+            --wait \
+            --timeout 180s
+
+      - name: Show deployed image
+        env:
+          IMAGE_REPOSITORY: ${{ vars.ACR_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}
+          IMAGE_TAG: ${{ github.event.inputs.image_tag }}
+        run: |
+          echo "Imagen desplegada:"
+          echo "${IMAGE_REPOSITORY}:${IMAGE_TAG}"

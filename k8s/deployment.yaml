@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: saludar
+  namespace: saludar
+  labels:
+    app: saludar
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: saludar
+  template:
+    metadata:
+      labels:
+        app: saludar
+    spec:
+      containers:
+        - name: saludar
+          image: REPLACE_IMAGE
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8080
+          readinessProbe:
+            httpGet:
+              path: /api/saludar/health
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /api/saludar/health
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 20
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 300m
+              memory: 256Mi
