@@ -17,6 +17,12 @@ spec:
           image: miacrprueba.azurecr.io/saludar:latest
           ports:
             - containerPort: 8080
+          env:
+            - name: APPLICATIONINSIGHTS_CONNECTION_STRING
+              valueFrom:
+                secretKeyRef:
+                  name: app-insights
+                  key: connection-string
           resources:
             requests:
               memory: "256Mi"
