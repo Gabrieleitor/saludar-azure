@@ -21,6 +21,7 @@ env:
   IMAGE_NAME: saludar
   RESOURCE_GROUP: prueba
   AKS_CLUSTER: saludar-aks
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
   test:
