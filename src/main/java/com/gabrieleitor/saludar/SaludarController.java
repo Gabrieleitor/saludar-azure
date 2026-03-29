@@ -1,5 +1,6 @@
 package com.gabrieleitor.saludar;
 
+import com.gabrieleitor.saludar.logging.RequestLogContext;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
@@ -12,10 +13,12 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api")
 public class SaludarController {
 
+    private final RequestLogContext requestLog;
     private final Counter saludosCounter;
     private final Timer tiempoRespuesta;
 
-    public SaludarController(MeterRegistry registry) {
+    public SaludarController(RequestLogContext requestLog, MeterRegistry registry) {
+        this.requestLog = requestLog;
         this.saludosCounter = Counter.builder("saludar.requests.total")
                 .description("Total de requests al endpoint saludar")
                 .register(registry);
@@ -28,6 +31,10 @@ public class SaludarController {
 
     @GetMapping("/saludar/{nombre}")
     public String saludar(@PathVariable String nombre) {
+        requestLog.businessInfo("SALUDAR",
+                "ip", requestLog.getClientIp(),
+                "nombre", nombre,
+                "uri", "/api/saludar/" + nombre);
         saludosCounter.increment();
         return tiempoRespuesta.record(() -> ("¿Cómo estás, " + nombre + "?"));
     }
