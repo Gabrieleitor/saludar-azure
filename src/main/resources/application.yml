@@ -1,0 +1,42 @@
+spring:
+  application:
+    name: saludar
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          # Con issuer-uri Spring descubre JWKS desde el well-known de Entra.
+          # Si también defines jwk-set-uri, en la práctica suele prevalecer la configuración por issuer.
+          issuer-uri: https://login.microsoftonline.com/bcd3f0c7-82f4-48b3-be1e-245845cd22fb/v2.0
+          jwk-set-uri: https://login.microsoftonline.com/bcd3f0c7-82f4-48b3-be1e-245845cd22fb/discovery/v2.0/keys
+          # Debe incluir el claim "aud" del token. Entra suele emitir el GUID de la API,
+          # a veces también api://<CLIENT_ID> (sin el sufijo del scope).
+          audiences:
+            - ${azure.activedirectory.client-id}
+            - api://${azure.activedirectory.client-id}
+            - ${azure.activedirectory.app-id-uri}
+
+server:
+  forward-headers-strategy: framework
+
+# Metadatos de la app en Azure (útil para documentación y otros starters de Azure;
+# el resource server usa sobre todo spring.security.oauth2.resourceserver.jwt.*).
+azure:
+  activedirectory:
+    tenant-id: bcd3f0c7-82f4-48b3-be1e-245845cd22fb
+    client-id: e2d253ab-64ce-421a-a6e1-3c5fd3fbbc82
+    app-id-uri: api://e2d253ab-64ce-421a-a6e1-3c5fd3fbbc82/access_as_user
+
+---
+# Tests: sin issuer-uri para no resolver metadata contra Microsoft al arrancar el contexto.
+spring:
+  config:
+    activate:
+      on-profile: test
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ""
+          jwk-set-uri: http://localhost:8081/.well-known/jwks.json
+          audiences: []

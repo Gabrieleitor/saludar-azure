@@ -4,6 +4,7 @@ import com.gabrieleitor.saludar.logging.RequestLogContext;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -40,6 +41,7 @@ public class SaludarController {
     }
 
     @GetMapping("/saludar2/{nombre}")
+    @PreAuthorize("hasRole('web_aplications')")
     public String saludar2(@PathVariable String nombre) {
         requestLog.businessInfo("SALUDAR2",
                 "ip", requestLog.getClientIp(),
