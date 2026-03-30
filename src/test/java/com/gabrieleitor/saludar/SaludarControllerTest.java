@@ -9,9 +9,15 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @SpringBootTest
 @ActiveProfiles("test")
@@ -20,6 +26,9 @@ class SaludarControllerTest {
 
 	@Autowired
 	private MockMvc mockMvc;
+
+	@Autowired
+	private JwtAuthenticationConverter jwtAuthenticationConverter;
 
 	@Test
 	void deberiaSaludarConNombre() throws Exception {
@@ -48,11 +57,14 @@ class SaludarControllerTest {
 	}
 
 	@Test
-	void saludar2ConScopeAccessAsUserDebeResponder200() throws Exception {
+	void saludar2ConClaimRolesWebAplicationsDebeResponder200() throws Exception {
 		String nombre = "Liliana";
 		this.mockMvc
 				.perform(get("/api/saludar2/{nombre}", nombre)
-						.with(jwt().authorities(new SimpleGrantedAuthority("SCOPE_access_as_user"))))
+						.with(jwt()
+								.jwt(j -> j.claim("roles", List.of("web_aplications")))
+								.authorities((Jwt jwt) -> new ArrayList<GrantedAuthority>(
+										jwtAuthenticationConverter.convert(jwt).getAuthorities()))))
 				.andExpect(status().isOk())
 				.andExpect(content().string("¿Cómo estás, " + nombre + "? (saludar 2)"));
 	}
