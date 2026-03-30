@@ -36,6 +36,6 @@ public class SaludarController {
                 "nombre", nombre,
                 "uri", "/api/saludar/" + nombre);
         saludosCounter.increment();
-        return tiempoRespuesta.record(() -> ("¿Cómo estás, " + nombre + "?"));
+        return tiempoRespuesta.record(() -> ("¿Cómo estás, " + nombre + "?????"));
     }
 }
