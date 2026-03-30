@@ -23,7 +23,7 @@ class SaludarControllerTest {
 		this.mockMvc
 				.perform(get("/api/saludar/{nombre}", nombre))
 				.andExpect(status().isOk())
-				.andExpect(content().string("¿Cómo estás, " + nombre + "?????"));
+				.andExpect(content().string("¿Cómo estás, " + nombre + "????5"));
 	}
 }
 

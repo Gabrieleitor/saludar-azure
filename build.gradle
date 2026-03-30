@@ -26,9 +26,9 @@ dependencyManagement {
 dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
-    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
     implementation 'com.azure.spring:spring-cloud-azure-starter-monitor'
-    implementation 'io.micrometer:micrometer-registry-azure-monitor'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.springframework.boot:spring-boot-starter-webmvc-test'
 }
