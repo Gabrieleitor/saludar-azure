@@ -38,4 +38,14 @@ public class SaludarController {
         saludosCounter.increment();
         return tiempoRespuesta.record(() -> ("¿Cómo estás, " + nombre + "????5"));
     }
+
+    @GetMapping("/saludar2/{nombre}")
+    public String saludar2(@PathVariable String nombre) {
+        requestLog.businessInfo("SALUDAR2",
+                "ip", requestLog.getClientIp(),
+                "nombre", nombre,
+                "uri", "/api/saludar2/" + nombre);
+        saludosCounter.increment();
+        return tiempoRespuesta.record(() -> ("¿Cómo estás, " + nombre + "? (saludar 2)"));
+    }
 }
